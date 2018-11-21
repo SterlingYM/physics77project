@@ -1,11 +1,12 @@
 # Physics 77 final project document
 team member: Yukei, Tom, Savannah
 updated: 11/21/2018
+Physics 77 project team 2018. All rights reserved.
 
 --------------------
 
 ### what to do
-- N-body simulation of galaxy (2D?)
+- N-body simulation of galaxy development(2D?)
 
 
 ### how to do
@@ -22,4 +23,38 @@ updated: 11/21/2018
 - having tangential velocity against single center point (origin)
 
 
+-------------------
 # System Overview 
+```python
+# starlist: 	Table of star information at given time. 
+#		Contains (1) coordinate and (2) velocity 
+#		for each particle (=star).
+# gal_hist: 	History of the Galaxy. 
+#		Table of starlist with time axis.
+```
+
+1.  **data_read**:
+	- Take in initial 'starlist'
+
+2.  Prepare an array as gal_hist
+
+3.  **time_development()**: for time t_next,
+	1. Prepare 'starlist_next'
+	2. **Starloop()**: for star[i],
+		1. **net_force()**:
+			- calculate force between i-j
+				- **dist()**: calculate distance
+				- **force_ij()**: calculate force value
+			- **components()**: break force in component form
+			- add all force in component form
+			- get (return) net force on star[i]
+		2. **accel()**:
+			- get (return) acceleration of star[i] 
+		3. **pos()**:
+			- get (return) next coordinate from r & v & a
+		4. **vel()**:
+			- get (return) next velocity from v & a
+		5. append star[i]'s data to 'starlist_next'
+	3. vStack 'starlist_next' to 'gal_hist'
+4. **animate()**:
+	- show animation of position of stars over time	
