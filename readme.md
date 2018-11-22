@@ -1,15 +1,19 @@
-# Physics 77 final project document
-team member: Yukei, Tom, Savannah
-updated: 11/21/2018
+# Physics 77 final project
+This is a set of codes for private project.
+
+Team member: Yukei, Tom, Savannah
+
+Updated: 11/21/2018
+
 Physics 77 project team 2018. All rights reserved.
 
 --------------------
 
-### what to do
+### what to do:
 - N-body simulation of galaxy development(2D?)
+- Animation of simulated data
 
-
-### how to do
+### how to do:
 - Take initial condition of N-particles (coordinate and velocity)
 - Run gravitational simulation to calculate next position and velocity
 - Loop above
@@ -18,7 +22,7 @@ Physics 77 project team 2018. All rights reserved.
 
 
 
-### initial condition
+### initial condition:
 - almost uniform distribution of particles with small random fluctuation of density
 - having tangential velocity against single center point (origin)
 
@@ -33,7 +37,9 @@ Physics 77 project team 2018. All rights reserved.
 #		Table of starlist with time axis.
 ```
 
-1.  **data_read**:
+note: function names are represented by **bold** letters
+
+1.  **data_read()**:
 	- Take in initial 'starlist'
 
 2.  Prepare an array as gal_hist
