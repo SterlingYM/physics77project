@@ -36,7 +36,7 @@ def dist(x1,x2,y1,y2):
 
 def force_ij(m1,m2,dist):
     # calculates the value of force between two particles given
-    force_ij = (G*m1*m2)/dist
+    force_ij = (G*m1*m2)/(dist**2)
     return force_ij
 
 
