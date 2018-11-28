@@ -1,23 +1,30 @@
-# constants
+#### constants ####
 G = 6.67408 * 10**(-11) #[m^3 * kg^(-1) * s^(-2)]
 
-# parameters
-csv_filename = 'csv_filename.csv'
+#### parameters ####
+# choose proper dt and t_max
+csv_filename = 'InitialCondition.csv'
 dt = 5000 #[s]
-t_max = 10**100
+t_max = 10**4
 
-
-
-# function ptototypes here
-
-
+#### functions ####
 def data_read(cev_filename):
     # imports csv file and returns initial condition data
     # formatted as [[star#,mass,x,y,vx,vy],[],[],...]
+    initial_list = []
     import csv
-    with open(cev_filename, 'rb') as csvfile:
-    starlist = csv.reader(csvfile, delimiter=' ', quotechar='|')
-    return  starlist
+    csvfile =  open(cev_filename, 'r')
+    csvreader = csv.reader(csvfile, delimiter=',')
+    for row in csvreader:
+        initial_list.append(row)
+    for i in range(len(initial_list)):
+        initial_list[i][1] = float(initial_list[i][1])
+        initial_list[i][2] = float(initial_list[i][2])
+        initial_list[i][3] = float(initial_list[i][3])
+        initial_list[i][4] = float(initial_list[i][4])
+        initial_list[i][5] = float(initial_list[i][5])
+
+    return  initial_list
 
 
 def dist(x1,x2,y1,y2):
@@ -51,10 +58,12 @@ def net_force(starlist,i):
         if j != i:
             m2, x2, y2 = starlist[j][1], starlist[j][2], starlist[j][3]
             d = dist(x1,x2,y1,y2)
-            net_Fx, net_Fy += components(force_ij(m1,m2,d),x1,x2,y1,y2)
+            Fx, Fy = components(force_ij(m1,m2,d),x1,x2,y1,y2)
+            net_Fx += Fx
+            net_Fy += Fy
     return net_Fx, net_Fy
 
-def acccel(mass,Fx,Fy):
+def accel(mass,Fx,Fy):
     # calculates acceleration from net force ans mass
     # Newton's second law
     acc_x = Fx / mass
@@ -65,8 +74,8 @@ def acccel(mass,Fx,Fy):
 def pos(starlist,i,ax,ay,dt):
     # calculates new position from current position, velocity, and acceleration
     _,_,x,y,vx,vy = starlist[i]
-    pos_x = x + vx*dt + ax*(t**2)/2
-    pos_y = y + vy*st + ay*(t**2)/2
+    pos_x = x + vx*dt + ax*(dt**2)/2
+    pos_y = y + vy*dt + ay*(dt**2)/2
     return pos_x, pos_y
 
 
@@ -82,7 +91,7 @@ def starloop(starlist):
     # repeats calculation of new starlist for star[i]
     # calls net_force(), accel(), pos(), vel() within a loop for i
     new_starlist = []
-    for i in range(len(starlist):
+    for i in range(len(starlist)):
         mass = starlist[i][1]
         Fx,Fy = net_force(starlist,i)
         ax,ay = accel(mass,Fx,Fy)
@@ -101,10 +110,10 @@ def time_development(initial_list,dt,t_max):
             starlist = starloop(initial_list)
             gal_hist.append([t,starlist])
         else:
-            gal_hist.append(starloop([t,gal_hist[k-1][1]]))
+            gal_hist.append([t,starloop(gal_hist[k-1][1])])
         t += dt
     return gal_hist
-
+'''
 def animate():
     #import visual 
     star = sphere(pos(initial condions),radius= 1,color = color.blue, make_trail = True, trail_type  = 'points', interval = 5, retain = 10 ) 
@@ -114,12 +123,10 @@ def animate():
     # need to integrate with other functions before continuing 
     
     #edit attempt
-
+'''
 
 #### main ####
-initial_list = dataread(csv_filename)
+initial_list = data_read(csv_filename)
 gal_hist = time_development(initial_list,dt,t_max)
-animate(gal_hist)
-
-
-
+#animate(gal_hist)
+print(gal_hist)
