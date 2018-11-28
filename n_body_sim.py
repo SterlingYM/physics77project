@@ -4,7 +4,7 @@ G = 6.67408 * 10**(-11) #[m^3 * kg^(-1) * s^(-2)]
 #### parameters ####
 # choose proper dt and t_max
 csv_filename = 'InitialCondition.csv'
-dt = 5000 #[s]
+dt = 500 #[s]
 t_max = 10**4
 
 #### functions ####
@@ -129,4 +129,14 @@ def animate():
 initial_list = data_read(csv_filename)
 gal_hist = time_development(initial_list,dt,t_max)
 #animate(gal_hist)
-print(gal_hist)
+#print(*gal_hist,sep="\n")
+
+import matplotlib.pyplot as plt
+plt.figure()
+
+for i in range(len(gal_hist)):
+    finalxlist = [gal_hist[i][1][j][2] for j in range(len(gal_hist[-1][1]))]
+    finalylist = [gal_hist[i][1][j][3] for j in range(len(gal_hist[-1][1]))]
+    plt.scatter(finalxlist,finalylist)
+    plt.grid()
+    plt.show()
