@@ -135,8 +135,8 @@ import matplotlib.pyplot as plt
 plt.figure()
 
 for i in range(len(gal_hist)):
-    finalxlist = [gal_hist[i][1][j][2] for j in range(len(gal_hist[-1][1]))]
-    finalylist = [gal_hist[i][1][j][3] for j in range(len(gal_hist[-1][1]))]
+    xlist = [gal_hist[i][1][j][2] for j in range(len(gal_hist[-1][1]))]
+    ylist = [gal_hist[i][1][j][3] for j in range(len(gal_hist[-1][1]))]
     plt.scatter(finalxlist,finalylist)
     plt.grid()
     plt.show()
