@@ -23,14 +23,15 @@ def data_read(cev_filename):
         initial_list[i][3] = float(initial_list[i][3])
         initial_list[i][4] = float(initial_list[i][4])
         initial_list[i][5] = float(initial_list[i][5])
-
+        initial_list[i][6] = float(initial_list[i][6])
+        initial_list[i][7] = float(initial_list[i][7])
     return  initial_list
 
 
-def dist(x1,x2,y1,y2):
+def dist(x1,x2,y1,y2,z1,z2):
     # calculates the distance between two sets of coordinates 
-    import math
-    dist = math.hypot(x2 - x1, y2 - y1)
+    import numpy as np
+    dist = np.sqrt((x2 - x1)**2 + (y2 - y1)**2 + (z2 - z1)**2)
     return dist
 
 
@@ -40,51 +41,56 @@ def force_ij(m1,m2,dist):
     return force_ij
 
 
-def components(val,x1,x2,y1,y2):
+def components(val,x1,x2,y1,y2,z1,z2):
     # returns given value in component form
     # assuming the value passed is a vector on (x1,y1) to (x2,y2)
-    d = dist(x1,x2,y1,y2)
+    d = dist(x1,x2,y1,y2,z1,z2)
     val_x = val * ((x2 - x1)/d)
     val_y = val * ((y2 - y1)/d)
-    return val_x, val_y
+    val_z = val * ((z2 - z1)/d)
+    return val_x, val_y, val_z
 
 
 def net_force(starlist,i):
     # calls force_ij and takes the sum of all force in x & y direction
     # resulting value after for loop should be the net force on star[i]
-    net_Fx, net_Fy = 0, 0
-    m1, x1, y1 = starlist[i][1], starlist[i][2], starlist[i][3]
+    net_Fx, net_Fy, net_Fz = 0, 0, 0
+    m1, x1, y1 ,z1 = starlist[i][1], starlist[i][2], starlist[i][3], starlist[i][4]
     for j in range(len(starlist)):
         if j != i:
-            m2, x2, y2 = starlist[j][1], starlist[j][2], starlist[j][3]
-            d = dist(x1,x2,y1,y2)
-            Fx, Fy = components(force_ij(m1,m2,d),x1,x2,y1,y2)
+            m2, x2, y2, z2 = starlist[j][1], starlist[j][2], starlist[j][3], starlist[j][4]
+            d = dist(x1,x2,y1,y2,z1,z2)
+            Fx, Fy, Fz = components(force_ij(m1,m2,d),x1,x2,y1,y2,z1,z2)
             net_Fx += Fx
             net_Fy += Fy
-    return net_Fx, net_Fy
+            net_Fz += Fz
+    return net_Fx, net_Fy, net_Fz
 
-def accel(mass,Fx,Fy):
+def accel(mass,Fx,Fy,Fz):
     # calculates acceleration from net force ans mass
     # Newton's second law
     acc_x = Fx / mass
     acc_y = Fy / mass
-    return acc_x, acc_y
+    acc_z = Fz / mass
+    return acc_x, acc_y, acc_z
 
 
-def pos(starlist,i,ax,ay,dt):
+def pos(starlist,i,ax,ay,az,dt):
     # calculates new position from current position, velocity, and acceleration
-    _,_,x,y,vx,vy = starlist[i]
+    _,_,x,y,z,vx,vy,vz = starlist[i]
     pos_x = x + vx*dt + ax*(dt**2)/2
     pos_y = y + vy*dt + ay*(dt**2)/2
-    return pos_x, pos_y
+    pos_z = z + vz*dt + az*(dt**2)/2
+    return pos_x, pos_y, pos_z
 
 
-def vel(starlist,i,ax,ay,dt):
+def vel(starlist,i,ax,ay,az,dt):
     # calculates new velocity from current velocity and acceleration
-    vx,vy = starlist[i][4], starlist[i][5]
+    vx,vy,vz = starlist[i][5], starlist[i][6], starlist[i][7]
     v_x = vx + ax*dt
     v_y = vy + ay*dt
-    return v_x, v_y
+    v_z = vz + az*dt
+    return v_x, v_y, v_z
 
 
 def starloop(starlist):
@@ -93,11 +99,11 @@ def starloop(starlist):
     new_starlist = []
     for i in range(len(starlist)):
         mass = starlist[i][1]
-        Fx,Fy = net_force(starlist,i)
-        ax,ay = accel(mass,Fx,Fy)
-        x_new, y_new   = pos(starlist,i,ax,ay,dt)
-        vx_new, vy_new = vel(starlist,i,ax,ay,dt)
-        new_starlist.append([starlist[i][0],mass,x_new,y_new,vx_new,vy_new])
+        Fx,Fy,Fz = net_force(starlist,i)
+        ax,ay,az = accel(mass,Fx,Fy,Fz)
+        x_new, y_new, z_new   = pos(starlist,i,ax,ay,az,dt)
+        vx_new, vy_new, vz_new = vel(starlist,i,ax,ay,az,dt)
+        new_starlist.append([starlist[i][0],mass,x_new,y_new,z_new,vx_new,vy_new,vz_new])
     return new_starlist
 
 def time_development(initial_list,dt,t_max):
@@ -112,31 +118,28 @@ def time_development(initial_list,dt,t_max):
         else:
             gal_hist.append([t,starloop(gal_hist[k-1][1])])
         t += dt
+        print(*gal_hist[k],sep="\n")
+
     return gal_hist
-'''
-def animate():
-    #import visual 
-    star = sphere(pos(initial condions),radius= 1,color = color.blue, make_trail = True, trail_type  = 'points', interval = 5, retain = 10 ) 
-    #star velocity
-    dt = 0.01 
-    "  while true .... do animation" 
-    # need to integrate with other functions before continuing 
-    
-    #edit attempt
-'''
+
+
+
+#def animate():
+    #animation part here 
 
 #### main ####
 initial_list = data_read(csv_filename)
 gal_hist = time_development(initial_list,dt,t_max)
 #animate(gal_hist)
-#print(*gal_hist,sep="\n")
 
+from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
-plt.figure()
-
 for i in range(len(gal_hist)):
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
     xlist = [gal_hist[i][1][j][2] for j in range(len(gal_hist[-1][1]))]
     ylist = [gal_hist[i][1][j][3] for j in range(len(gal_hist[-1][1]))]
-    plt.scatter(finalxlist,finalylist)
-    plt.grid()
+    zlist = [gal_hist[i][1][j][4] for j in range(len(gal_hist[-1][1]))]
+    ax.scatter(xlist,ylist,zlist)
     plt.show()
