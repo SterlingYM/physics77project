@@ -6,8 +6,8 @@ G = 6.67408 * 10**(-11) #[m^3 * kg^(-1) * s^(-2)]
 csv_filename = 'Initial_Conditions_test.csv'
 day = 3600*24 #[sec]
 year = 3600*24*365 #[sec]
-dt = 365 * day #[sec]
-t_max = 10**3 * year #[sec]
+dt = 10000 * year #[sec]
+t_max = 10**7 * year #[sec]
 BH_mass = 8.2 * 10**36 #[kg]
 
 #### functions ####
@@ -41,10 +41,16 @@ def dist(x1,x2,y1,y2,z1,z2):
     return dist
 
 
-def force_ij(m1,m2,dist):
+def force_ij(starlist1,starlist2):
     # calculates the value of force between two particles given
-    force_ij = (G*m1*m2)/(dist**2)
-    return force_ij
+    m1, x1, y1 ,z1 = starlist1[1], starlist1[2], starlist1[3], starlist1[4]
+    m2, x2, y2, z2 = starlist2[1], starlist2[2], starlist2[3], starlist2[4]
+    if x1==x2 and y1==y2 and z1==z2:
+        return 0
+    d = dist(x1,x2,y1,y2,z1,z2)
+    force_ij = (G*m1*m2)/(d**2)
+    Fx,Fy,Fz = components(force_ij,x1,x2,y1,y2,z1,z2)
+    return [Fx,Fy,Fz]
 
 
 def components(val,x1,x2,y1,y2,z1,z2):
@@ -57,24 +63,36 @@ def components(val,x1,x2,y1,y2,z1,z2):
     return val_x, val_y, val_z
 
 
-def net_force(starlist,i):
+def net_force(starlist):
     # calls force_ij and takes the sum of all force in x & y direction
     # resulting value after for loop should be the net force on star[i]
     net_Fx, net_Fy, net_Fz = 0, 0, 0
-    m1, x1, y1 ,z1 = starlist[i][1], starlist[i][2], starlist[i][3], starlist[i][4]
-    for j in range(len(starlist)):
-        if j != i:
-            m2, x2, y2, z2 = starlist[j][1], starlist[j][2], starlist[j][3], starlist[j][4]
-            d = dist(x1,x2,y1,y2,z1,z2)
-            Fx, Fy, Fz = components(force_ij(m1,m2,d),x1,x2,y1,y2,z1,z2)
-            net_Fx += Fx
-            net_Fy += Fy
-            net_Fz += Fz
-    BH_Fx, BH_Fy, BH_Fz = components(force_ij(m1,BH_mass,dist(x1,0,y1,0,z1,0)),x1,0,y1,0,z1,0)
-    net_Fx += BH_Fx
-    net_Fy += BH_Fy
-    net_Fz += BH_Fz
-    return net_Fx, net_Fy, net_Fz
+    n_stars = len(starlist)
+
+    # use multiprocessing and get all combination of forces
+    import multiprocessing
+    from itertools import product
+    import numpy as np
+    with multiprocessing.Pool() as pool:
+        F_ij_combinations_xyz = pool.starmap(force_ij, product(starlist,repeat=2))
+        # output will be [F_ij_x,F_ij_y,F_ij_z]
+    # change combination list to matrix
+    F_ij_matrix = np.zeros((n_stars,n_stars,3),dtype=float)
+    counter = 0
+    for i in range(n_stars-1):
+        for j in range(i+1,n_stars):
+            F_ij_matrix[i,j,] = np.transpose(F_ij_combinations_xyz[counter]) # xyz-components
+            counter += 1
+    F_ij_transp = (-1)*F_ij_matrix.transpose((1,0,2))
+
+    # sum all force on each object to get array of net force vector [[F_net_x],[F_net_y],[F_net_z]]
+    net_F = np.sum((F_ij_matrix + F_ij_transp),axis=1)
+
+    #BH_Fx, BH_Fy, BH_Fz = components(starlist[i],['BH',BH_mass,0,0,0,0,0,0])
+    #net_Fx += BH_Fx
+    #net_Fy += BH_Fy
+    #net_Fz += BH_Fz
+    return net_F
 
 def accel(mass,Fx,Fy,Fz):
     # calculates acceleration from net force ans mass
@@ -107,9 +125,11 @@ def starloop(starlist):
     # repeats calculation of new starlist for star[i]
     # calls net_force(), accel(), pos(), vel() within a loop for i
     new_starlist = []
+    net_F = net_force(starlist)
+
     for i in range(len(starlist)):
         mass = starlist[i][1]
-        Fx,Fy,Fz = net_force(starlist,i)
+        Fx,Fy,Fz = net_F[i,0],net_F[i,1],net_F[i,2]
         ax,ay,az = accel(mass,Fx,Fy,Fz)
         x_new, y_new, z_new   = pos(starlist,i,ax,ay,az,dt)
         vx_new, vy_new, vz_new = vel(starlist,i,ax,ay,az,dt)
