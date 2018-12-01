@@ -5,7 +5,8 @@ G = 6.67408 * 10**(-11) #[m^3 * kg^(-1) * s^(-2)]
 # choose proper dt and t_max
 csv_filename = 'InitialCondition.csv'
 dt = 500 #[s]
-t_max = 10**4
+t_max = 10**6
+BH_mass = 5* 10**5 #[kg]
 
 #### functions ####
 def data_read(cev_filename):
@@ -25,6 +26,7 @@ def data_read(cev_filename):
         initial_list[i][5] = float(initial_list[i][5])
         initial_list[i][6] = float(initial_list[i][6])
         initial_list[i][7] = float(initial_list[i][7])
+        print(i)
     return  initial_list
 
 
@@ -64,6 +66,10 @@ def net_force(starlist,i):
             net_Fx += Fx
             net_Fy += Fy
             net_Fz += Fz
+    BH_Fx, BH_Fy, BH_Fz = components(force_ij(m1,BH_mass,dist(x1,0,y1,0,z1,0)),x1,0,y1,0,z1,0)
+    net_Fx += BH_Fx
+    net_Fy += BH_Fy
+    net_Fz += BH_Fz
     return net_Fx, net_Fy, net_Fz
 
 def accel(mass,Fx,Fy,Fz):
@@ -118,7 +124,7 @@ def time_development(initial_list,dt,t_max):
         else:
             gal_hist.append([t,starloop(gal_hist[k-1][1])])
         t += dt
-        print(*gal_hist[k],sep="\n")
+        #print(*gal_hist[k],sep="\n")
 
     return gal_hist
 
@@ -134,12 +140,20 @@ gal_hist = time_development(initial_list,dt,t_max)
 
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
-for i in range(len(gal_hist)):
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
+fig = plt.figure(figsize = (15,15))
+ax = fig.add_subplot(111, projection='3d')
 
+
+for i in range(len(gal_hist)):
+    ax.cla()
+    ax.set_xlim(-100,100)
+    ax.set_ylim(-100,100)
+    ax.set_zlim(-100,100)
     xlist = [gal_hist[i][1][j][2] for j in range(len(gal_hist[-1][1]))]
     ylist = [gal_hist[i][1][j][3] for j in range(len(gal_hist[-1][1]))]
     zlist = [gal_hist[i][1][j][4] for j in range(len(gal_hist[-1][1]))]
+    ax.scatter(0,0,0,color='orange')
     ax.scatter(xlist,ylist,zlist)
-    plt.show()
+    plt.pause(0.05)
+    
+plt.show()
