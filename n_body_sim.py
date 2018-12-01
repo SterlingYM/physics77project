@@ -73,9 +73,10 @@ def net_force(starlist):
     import multiprocessing
     from itertools import product
     import numpy as np
-    with multiprocessing.Pool() as pool:
+    with multiprocessing.Pool(2) as pool:
         F_ij_combinations_xyz = pool.starmap(force_ij, product(starlist,repeat=2))
         # output will be [F_ij_x,F_ij_y,F_ij_z]
+    
     # change combination list to matrix
     F_ij_matrix = np.zeros((n_stars,n_stars,3),dtype=float)
     counter = 0
@@ -125,8 +126,13 @@ def starloop(starlist):
     # repeats calculation of new starlist for star[i]
     # calls net_force(), accel(), pos(), vel() within a loop for i
     new_starlist = []
-    net_F = net_force(starlist)
+    n_stars = len(starlist)
 
+
+    net_F = net_force(starlist)
+    mass  = np.transpose([starlist[i][1] for i in range(n_stars)])
+    acc   = np.divide(net_F,mass)
+    pos   = 
     for i in range(len(starlist)):
         mass = starlist[i][1]
         Fx,Fy,Fz = net_F[i,0],net_F[i,1],net_F[i,2]
