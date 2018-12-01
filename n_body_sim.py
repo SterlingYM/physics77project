@@ -3,10 +3,12 @@ G = 6.67408 * 10**(-11) #[m^3 * kg^(-1) * s^(-2)]
 
 #### parameters ####
 # choose proper dt and t_max
-csv_filename = 'InitialCondition.csv'
-dt = 500 #[s]
-t_max = 10**6
-BH_mass = 5* 10**5 #[kg]
+csv_filename = 'Initial_Conditions_test.csv'
+day = 3600*24 #[sec]
+year = 3600*24*365 #[sec]
+dt = 365 * day #[sec]
+t_max = 10**3 * year #[sec]
+BH_mass = 8.2 * 10**36 #[kg]
 
 #### functions ####
 def data_read(cev_filename):
@@ -16,6 +18,7 @@ def data_read(cev_filename):
     import csv
     csvfile =  open(cev_filename, 'r')
     csvreader = csv.reader(csvfile, delimiter=',')
+    print('reading initial list... '),
     for row in csvreader:
         initial_list.append(row)
     for i in range(len(initial_list)):
@@ -26,7 +29,8 @@ def data_read(cev_filename):
         initial_list[i][5] = float(initial_list[i][5])
         initial_list[i][6] = float(initial_list[i][6])
         initial_list[i][7] = float(initial_list[i][7])
-        print(i)
+        print('\r{}/{} done'.format(i+1,len(initial_list)),end="")
+    print("")
     return  initial_list
 
 
@@ -117,6 +121,7 @@ def time_development(initial_list,dt,t_max):
     # repeats above for given time length
     gal_hist = []
     t = 0
+    print('Simulation in progress... ')
     for k in range(int(t_max/dt)):
         if k == 0:
             starlist = starloop(initial_list)
@@ -125,7 +130,8 @@ def time_development(initial_list,dt,t_max):
             gal_hist.append([t,starloop(gal_hist[k-1][1])])
         t += dt
         #print(*gal_hist[k],sep="\n")
-
+        print('\r{:.2f}% done'.format((k+1)*100/int(t_max/dt)),end="")
+    print("")
     return gal_hist
 
 
@@ -146,14 +152,15 @@ ax = fig.add_subplot(111, projection='3d')
 
 for i in range(len(gal_hist)):
     ax.cla()
-    ax.set_xlim(-100,100)
-    ax.set_ylim(-100,100)
-    ax.set_zlim(-100,100)
+    #ax.set_xlim(-100,100)
+    #ax.set_ylim(-100,100)
+    #ax.set_zlim(-100,100)
     xlist = [gal_hist[i][1][j][2] for j in range(len(gal_hist[-1][1]))]
     ylist = [gal_hist[i][1][j][3] for j in range(len(gal_hist[-1][1]))]
     zlist = [gal_hist[i][1][j][4] for j in range(len(gal_hist[-1][1]))]
     ax.scatter(0,0,0,color='orange')
     ax.scatter(xlist,ylist,zlist)
-    plt.pause(0.05)
+    plt.title('galaxy age = {:.3f} [yr]'.format(gal_hist[i][0]/year))
+    plt.pause(0.01)
     
 plt.show()
