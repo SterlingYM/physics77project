@@ -1,12 +1,13 @@
 import csv
 
-num_stars = 10**2
+num_stars = 5* 10**2
 BH_mass = 8.2 * 10**36 #[kg]
 parsec = 3.086 * 10**16 #[m]
 gal_radius = 25 * 10**3 * parsec #[m]
 gal_disk_thickness_half = 0.15 * 10**3 * parsec #[m]
 gal_bulge_radius = 0.5 * 10**3 * parsec #[m]
 Msun = 10**30 #[kg]
+star_v = 500 * 10**3 #[m/s]
 
 import numpy as np
 
@@ -15,9 +16,9 @@ bulge_mass = np.random.uniform(0.1*Msun,15*Msun,num_stars)
 bulge_x = np.random.uniform(-1*gal_bulge_radius,gal_bulge_radius,num_stars)
 bulge_y = np.random.uniform(-1*gal_bulge_radius,gal_bulge_radius,num_stars)
 bulge_z = np.random.uniform(-1*gal_bulge_radius,gal_bulge_radius,num_stars)
-bulge_vx = np.zeros(num_stars,dtype=float)
-bulge_vy = np.zeros(num_stars,dtype=float)
-bulge_vz = np.zeros(num_stars,dtype=float)
+bulge_vx = np.random.uniform(-1*star_v,star_v,num_stars)
+bulge_vy = np.random.uniform(-1*star_v,star_v,num_stars)
+bulge_vz = np.random.uniform(-1*star_v,star_v,num_stars) 
 
 
 with open('Initial_Conditions_test.csv','w') as csvfile:
