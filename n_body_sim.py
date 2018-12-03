@@ -4,11 +4,13 @@ G = 6.67408 * 10**(-11) #[m^3 * kg^(-1) * s^(-2)]
 #### parameters ####
 # choose proper dt and t_max
 csv_filename = 'Initial_Conditions_test.csv'
+pi = 3.141592653
 day = 3600*24 #[sec]
 year = 3600*24*365 #[sec]
-dt = 10**5 * year #[sec]
-t_max = 10**7 * year #[sec]
+dt = 10**6 * year #[sec]
+t_max = 10**10 * year #[sec]
 BH_mass = 8.2 * 10**36 #[kg]
+DM_density = 6.0 * 10 ** (-22) #[kg/m^3]
 
 #### functions ####
 def data_read(cev_filename):
@@ -33,6 +35,104 @@ def data_read(cev_filename):
     print("")
     return  initial_list
 
+def time_development(initial_list,dt,t_max):
+    # calls starloop() and stacks result on 'gal_hist'
+    # repeats above for given time length
+    gal_hist = []
+    t = 0
+    print('Simulation in progress... ')
+
+    ## animation only (read animation block below) #####
+    from mpl_toolkits.mplot3d import Axes3D
+    import matplotlib.pyplot as plt
+    fig = plt.figure(figsize = plt.figaspect(0.7)*1.5)
+    ax = fig.add_subplot(111, projection='3d')
+    #ax.set_aspect('equal')
+    ####################################################
+    
+    for k in range(int(t_max/dt)):
+        if k == 0:
+            starlist = starloop(initial_list)
+            gal_hist.append([t,starlist])
+        else:
+            gal_hist.append([t,starloop(gal_hist[k-1][1])])
+
+        ###  Real-time animation   #####################
+        # To perform/disable real-time results, uncomment/comment below:
+        animate_inline(gal_hist[k][1],ax,t) 
+        ################################################
+
+        t += dt
+        print('\r{:.3f}% done'.format(float((k+1)*100)/float(t_max/dt)),end="")
+
+    print("")
+    return gal_hist
+
+def starloop(starlist):
+    # repeats calculation of new starlist for star[i]
+    # calls net_force(), accel(), pos(), vel() within a loop for i
+    import numpy as np
+    
+    new_starlist = []
+    n_stars = len(starlist)
+    
+    # previous data
+    p_pos = np.array([starlist[i][2:5] for i in range(n_stars)])
+    p_vel = np.array([starlist[i][5:8] for i in range(n_stars)])
+    # acceleration from previous data
+    net_F = net_force(starlist)
+    mass  = np.array([[starlist[i][1]] for i in range(n_stars)])
+    acc   = np.divide(net_F,mass)
+
+    # new data calculation
+    pos   = p_pos + np.multiply(p_vel,dt) + np.multiply(acc,(dt**2)/2)
+    vel   = p_vel + np.multiply(acc,dt)
+
+    for i in range(len(starlist)):
+        new_data = [i,*mass[i],*pos[i,:],*vel[i,:]]
+        new_starlist.append(new_data)
+    return new_starlist
+
+
+def animate(gal_hist):
+    # animates data passed in gal_hist
+    from mpl_toolkits.mplot3d import Axes3D
+    import matplotlib.pyplot as plt
+    fig = plt.figure(figsize = (15,15))
+    ax = fig.add_subplot(111, projection='3d')
+    for i in range(len(gal_hist)):
+        ax.cla()
+        #ax.set_xlim(-100,100)
+        #ax.set_ylim(-100,100)
+        #ax.set_zlim(-100,100)
+        #ax.w_xaxis.set_pane_color((1.0,1.0,1.0,0))
+        xlist = [gal_hist[i][1][j][2] for j in range(len(gal_hist[-1][1]))]
+        ylist = [gal_hist[i][1][j][3] for j in range(len(gal_hist[-1][1]))]
+        zlist = [gal_hist[i][1][j][4] for j in range(len(gal_hist[-1][1]))]
+        ax.scatter(0,0,0,color='orange')
+        ax.scatter(xlist,ylist,zlist)
+        plt.title('galaxy age = {:1.3} [yr]'.format(gal_hist[i][0]/year))
+        plt.pause(0.01)
+    plt.show()
+
+def animate_inline(starlist,ax,t):
+    # animates data real time
+    from mpl_toolkits.mplot3d import Axes3D
+    import matplotlib.pyplot as plt
+    ax.cla()
+    xlist = [starlist[i][2] for i in range(len(starlist))]
+    ylist = [starlist[i][3] for i in range(len(starlist))]
+    zlist = [starlist[i][4] for i in range(len(starlist))]
+    ax.scatter(0,0,0,color='orange')
+    ax.scatter(xlist,ylist,zlist)
+    
+    MAX = 0.8 * 10**21
+    ax.set_xlim(-MAX,MAX)
+    ax.set_ylim(-MAX,MAX)
+    ax.set_zlim(-MAX,MAX)
+ 
+    plt.title('galaxy age = {:1.3} [yr]'.format(t/year))
+    plt.pause(0.001)
 
 def dist(x1,x2,y1,y2,z1,z2):
     # calculates the distance between two sets of coordinates 
@@ -97,81 +197,21 @@ def net_force(starlist):
     # add SMB gravity
     BH_data  = ['BH',BH_mass,0,0,0,0,0,0]
     BH_force = np.array([force_ij(starlist[i],BH_data) for i in range(n_stars)])
-    return net_F + BH_force
-
-
-def starloop(starlist):
-    # repeats calculation of new starlist for star[i]
-    # calls net_force(), accel(), pos(), vel() within a loop for i
-    import numpy as np
     
-    new_starlist = []
-    n_stars = len(starlist)
+    # add DM gravity
+    DM_force = np.array([force_ij(starlist[i],['DM',DM_mass(starlist[i]),0,0,0,0,0,0]) for i in range(n_stars)])
     
-    # previous data
-    p_pos = np.array([starlist[i][2:5] for i in range(n_stars)])
-    p_vel = np.array([starlist[i][5:8] for i in range(n_stars)])
-    
-    # acceleration from previous data
-    net_F = net_force(starlist)
-    mass  = np.array([[starlist[i][1]] for i in range(n_stars)])
-    acc   = np.divide(net_F,mass)
+    return net_F + BH_force + DM_force
 
-    # new data calculation
-    pos   = p_pos + np.multiply(p_vel,dt) + np.multiply(acc,(dt**2)/2)
-    vel   = p_vel + np.multiply(acc,dt)
+def DM_mass(star):
+    r = dist(star[2],0,star[3],0,star[4],0)
+    v = 4 * pi * r**3 / 3
+    return v * DM_density
 
-    for i in range(len(starlist)):
-        new_data = [i,*mass[i],*pos[i,:],*vel[i,:]]
-        new_starlist.append(new_data)
-    return new_starlist
-
-def time_development(initial_list,dt,t_max):
-    # calls starloop() and stacks result on 'gal_hist'
-    # repeats above for given time length
-    gal_hist = []
-    t = 0
-    print('Simulation in progress... ')
-    for k in range(int(t_max/dt)):
-        if k == 0:
-            starlist = starloop(initial_list)
-            gal_hist.append([t,starlist])
-        else:
-            gal_hist.append([t,starloop(gal_hist[k-1][1])])
-        t += dt
-        #print(*gal_hist[k],sep="\n")
-        print('\r{:.3f}% done'.format(float((k+1)*100)/float(t_max/dt)),end="")
-    print("")
-    return gal_hist
-
-
-
-#def animate():
-    #animation part here 
 
 #### main ####
 initial_list = data_read(csv_filename)
 gal_hist = time_development(initial_list,dt,t_max)
 #animate(gal_hist)
 
-from mpl_toolkits.mplot3d import Axes3D
-import matplotlib.pyplot as plt
-fig = plt.figure(figsize = (15,15))
-ax = fig.add_subplot(111, projection='3d')
 
-
-for i in range(len(gal_hist)):
-    ax.cla()
-    #ax.set_xlim(-100,100)
-    #ax.set_ylim(-100,100)
-    #ax.set_zlim(-100,100)
-    ax.w_xaxis.set_pane_color((1.0,1.0,1.0,0))
-    xlist = [gal_hist[i][1][j][2] for j in range(len(gal_hist[-1][1]))]
-    ylist = [gal_hist[i][1][j][3] for j in range(len(gal_hist[-1][1]))]
-    zlist = [gal_hist[i][1][j][4] for j in range(len(gal_hist[-1][1]))]
-    ax.scatter(0,0,0,color='orange')
-    ax.scatter(xlist,ylist,zlist)
-    plt.title('galaxy age = {:.3f} [yr]'.format(gal_hist[i][0]/year))
-    plt.pause(0.01)
-    
-plt.show()
