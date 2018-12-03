@@ -1,3 +1,5 @@
+import sys
+
 year = 3600*24*365 #[sec]
 
 def animate(gal_hist):
@@ -38,5 +40,13 @@ def read_data(filename):
 
 ##### main #####
 filename = 'gal_hist.dat'
-gal_hist = read_data(filename)
-animate(gal_hist)
+
+if len(sys.argv) != 0:
+    from multiprocessing import Pool
+    gal_hist = list(read_data(sys.argv[i]) for i in range(1,len(sys.argv)))
+    with Pool(len(sys.argv)) as p:
+        p.map(animate,gal_hist)
+else:
+    print('Importing data from default data \'{}\'...'.format(filename))
+    gal_hist = read_data(filename)
+    animate(gal_hist)
