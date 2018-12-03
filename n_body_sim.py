@@ -4,11 +4,12 @@ G = 6.67408 * 10**(-11) #[m^3 * kg^(-1) * s^(-2)]
 #### parameters ####
 # choose proper dt and t_max
 csv_filename = 'Initial_Conditions_test.csv'
+savefile_name = 'gal_hist.dat'
 pi = 3.141592653
 day = 3600*24 #[sec]
 year = 3600*24*365 #[sec]
 dt = 10**6 * year #[sec]
-t_max = 10**10 * year #[sec]
+t_max = 10**9 * year #[sec]
 BH_mass = 8.2 * 10**36 #[kg]
 DM_density = 6.0 * 10 ** (-22) #[kg/m^3]
 
@@ -20,7 +21,6 @@ def data_read(cev_filename):
     import csv
     csvfile =  open(cev_filename, 'r')
     csvreader = csv.reader(csvfile, delimiter=',')
-    print('reading initial list... '),
     for row in csvreader:
         initial_list.append(row)
     for i in range(len(initial_list)):
@@ -31,7 +31,7 @@ def data_read(cev_filename):
         initial_list[i][5] = float(initial_list[i][5])
         initial_list[i][6] = float(initial_list[i][6])
         initial_list[i][7] = float(initial_list[i][7])
-        print('\r{}/{} done'.format(i+1,len(initial_list)),end="")
+        print('\rReading initial list...  \t{}/{} done'.format(i+1,len(initial_list)),end="")
     print("")
     return  initial_list
 
@@ -40,14 +40,12 @@ def time_development(initial_list,dt,t_max):
     # repeats above for given time length
     gal_hist = []
     t = 0
-    print('Simulation in progress... ')
 
     ## animation only (read animation block below) #####
     from mpl_toolkits.mplot3d import Axes3D
     import matplotlib.pyplot as plt
     fig = plt.figure(figsize = plt.figaspect(0.7)*1.5)
     ax = fig.add_subplot(111, projection='3d')
-    #ax.set_aspect('equal')
     ####################################################
     
     for k in range(int(t_max/dt)):
@@ -63,7 +61,7 @@ def time_development(initial_list,dt,t_max):
         ################################################
 
         t += dt
-        print('\r{:.3f}% done'.format(float((k+1)*100)/float(t_max/dt)),end="")
+        print('\rSimulation in progress...\t{:.2f}% done'.format(float((k+1)*100)/float(t_max/dt)),end="")
 
     print("")
     return gal_hist
@@ -98,21 +96,27 @@ def animate(gal_hist):
     # animates data passed in gal_hist
     from mpl_toolkits.mplot3d import Axes3D
     import matplotlib.pyplot as plt
-    fig = plt.figure(figsize = (15,15))
+    fig = plt.figure(figsize = plt.figaspect(0.7)*1.5)
     ax = fig.add_subplot(111, projection='3d')
+
+    # boundary
+    MAX = 0.8 * 10**21
+    ax.set_xlim(-MAX,MAX)
+    ax.set_ylim(-MAX,MAX)
+    ax.set_zlim(-MAX,MAX)
+    
     for i in range(len(gal_hist)):
         ax.cla()
-        #ax.set_xlim(-100,100)
-        #ax.set_ylim(-100,100)
-        #ax.set_zlim(-100,100)
-        #ax.w_xaxis.set_pane_color((1.0,1.0,1.0,0))
+        # data
         xlist = [gal_hist[i][1][j][2] for j in range(len(gal_hist[-1][1]))]
         ylist = [gal_hist[i][1][j][3] for j in range(len(gal_hist[-1][1]))]
         zlist = [gal_hist[i][1][j][4] for j in range(len(gal_hist[-1][1]))]
+        
+        #plot
         ax.scatter(0,0,0,color='orange')
         ax.scatter(xlist,ylist,zlist)
-        plt.title('galaxy age = {:1.3} [yr]'.format(gal_hist[i][0]/year))
-        plt.pause(0.01)
+        plt.title('galaxy age = {:1.0} [yr]'.format(gal_hist[i][0]/year))
+        plt.pause(0.001)
     plt.show()
 
 def animate_inline(starlist,ax,t):
@@ -208,10 +212,19 @@ def DM_mass(star):
     v = 4 * pi * r**3 / 3
     return v * DM_density
 
+def save_data(gal_hist,savefile_name):
+    # saves all data into .dat file
+    import pickle
+    output = open(savefile_name,'wb')
+    pickle.dump(gal_hist,output)
+    output.close()
+    print('Generated Data was saved to {} successfully.'.format(savefile_name))
 
 #### main ####
 initial_list = data_read(csv_filename)
 gal_hist = time_development(initial_list,dt,t_max)
-#animate(gal_hist)
+save_data(gal_hist,savefile_name)
+
+#animate(gal_hist) -> 12/2/2018: additional .py code will do the animation part now
 
 
