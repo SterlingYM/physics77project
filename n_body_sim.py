@@ -262,11 +262,21 @@ def net_force(starlist):
     import itertools
     from itertools import product
 
+    ########## multicore processing #########
+    # uncomment/comment out to switch between multicore/single-core mode
+    # multi-core processing  may or may not be faster
+    #  depending on the CPU power.
+    ########################################
+    # **** multi-core ****
     #with multiprocessing.Pool(n_stars) as pool:
     #    F_ij_combinations_xyz = pool.starmap(force_ij, product(starlist,repeat=2))
+    ########################################
+    # **** single-core ****
     arg1, arg2 = zip(*product(starlist,repeat=2))
     F_ij_combinations_xyz = list(map(force_ij,arg1,arg2))
-    
+    ########################################
+
+
     # change combination list to matrix
     F_ij_matrix = np.zeros((n_stars,n_stars,3),dtype=float)
     counter = 0
