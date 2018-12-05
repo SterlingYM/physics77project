@@ -1,19 +1,61 @@
-#### constants ####
-G = 6.67408 * 10**(-11) #[m^3 * kg^(-1) * s^(-2)]
+######## filename #########
+# initial data file
+import sys
+if len(sys.argv) <=1:
+    print('Error: File name not given')
+    print(' --> Specify initial data file name')
+    print('     (example: python3 n_body_sim.py initial_data.dat)')
+    exit()
+else:
+    dat_filename = sys.argv[1]
 
-#### parameters ####
-# choose proper dt and t_max
-csv_filename = 'Initial_Conditions_test.csv'
-savefile_name = 'gal_hist.dat'
+# output data file
+import datetime
+now = datetime.datetime.now()
+save_filename = 'gal_hist/gal_hist_{}.dat'.format(now.strftime('%m%d%Y_%H%M'))
+print(save_filename)
+
+########## constants #########
+
+# constants are shared with dat_generator.py
+# (do not change)
+parsec = 3.086 * 10**16 #[m]
+Msun = 1.989 * 10**30 #[kg]
+G = 6.67408 * 10**(-11) #[m^3 * kg^(-1) * s^(-2)]
 pi = 3.141592653
 day = 3600*24 #[sec]
 year = 3600*24*365 #[sec]
+kpc = 3.086 * 10**19 #[m]
+
+########### parameters ##########
+# these are default parameters.
+# if parameters in dat_generator.py is changed, the new value will be imported.
+
+
+# Galaxy property
+gal_disk_r  = 25 * 10**3 * parsec #[m]
+gal_disk_dz = 0.15 * 10**3 * parsec #[m]
+gal_bulge_r = 0.5 * 10**3 * parsec #[m]
+BH_mass = 8.2 * 10**36 #[kg]
+rho_0 = 6.0 * 10 ** (-21) #[kg/m^3]
+r_c = 60 * kpc #[m]
+
+# Star property
+star_v = 300 * 10**3 #[m/s]
+num_stars   = 2* 10**2
+actual_num  = 10 ** 10
+mass_coef   = actual_num / num_stars
+
+# simulation parameters
 dt = 10**6 * year #[sec]
 t_max = 10**9 * year #[sec]
-BH_mass = 8.2 * 10**36 #[kg]
-DM_density = 6.0 * 10 ** (-22) #[kg/m^3]
+####################################
+
 
 #### functions ####
+
+#######################################
+## this function was changed to dat_read() function below (12/4/2108)
 def data_read(cev_filename):
     # imports csv file and returns initial condition data
     # formatted as [[star#,mass,x,y,vx,vy],[],[],...]
@@ -31,9 +73,26 @@ def data_read(cev_filename):
         initial_list[i][5] = float(initial_list[i][5])
         initial_list[i][6] = float(initial_list[i][6])
         initial_list[i][7] = float(initial_list[i][7])
-        print('\rReading initial list...  \t{}/{} done'.format(i+1,len(initial_list)),end="")
-    print("")
     return  initial_list
+########################################
+
+def dat_read(dat_filename):
+    # imports .dat file and returns initial condition data
+    # formatted as [[star#,mass,x,y,z,vx,vy,vz],[],[],...]
+    # also initial condition data is stored in condition_data
+    import pickle
+    dat_file = open(dat_filename,'rb')
+    initial_data = pickle.load(dat_file)
+    condition_data = initial_data[0]
+    initial_list   = initial_data[1]
+    print('Initial List from {} imported successfully.'.format(dat_filename))
+    return initial_list, condition_data
+
+def condition_data_input(condition_data):
+    # print(condition_data)
+    global disk_r,disk_dz,bulge_r,BH_mass,rho0,r_c,star_v,num_stars,actual_num,mass_coef,dt,t_max
+    disk_r,disk_dz,bulge_r,BH_mass,rho0,r_c,star_v,num_stars,actual_num,mass_coef,dt,t_max = condition_data[1]
+
 
 def time_development(initial_list,dt,t_max):
     # calls starloop() and stacks result on 'gal_hist'
@@ -48,6 +107,7 @@ def time_development(initial_list,dt,t_max):
     ax = fig.add_subplot(111, projection='3d')
     ####################################################
     
+    print("\n\n\n")
     for k in range(int(t_max/dt)):
         if k == 0:
             starlist = starloop(initial_list)
@@ -61,7 +121,11 @@ def time_development(initial_list,dt,t_max):
         ################################################
 
         t += dt
-        print('\rSimulation in progress...\t{:.2f}% done'.format(float((k+1)*100)/float(t_max/dt)),end="")
+        # output formatting
+        CURSOR_UP = '\x1b[1A'
+        ERASE_LINE = '\x1b[2K'
+        print(ERASE_LINE,CURSOR_UP,ERASE_LINE,CURSOR_UP,ERASE_LINE,CURSOR_UP,ERASE_LINE,CURSOR_UP,ERASE_LINE,end="")
+        print('\rSimulation in progress...\t{:.2f}% completed\n\n'.format(float((k+1)*100)/float(t_max/dt)),flush=True)
 
     print("")
     return gal_hist
@@ -74,21 +138,33 @@ def starloop(starlist):
     new_starlist = []
     n_stars = len(starlist)
     
+    # output formatting
+    CURSOR_UP = '\x1b[1A'
+    ERASE_LINE = '\x1b[2K'
+   
     # previous data
+    print(CURSOR_UP,CURSOR_UP,ERASE_LINE,'\tLoading Previous data... ',end="",flush=True)
     p_pos = np.array([starlist[i][2:5] for i in range(n_stars)])
     p_vel = np.array([starlist[i][5:8] for i in range(n_stars)])
+    print('\tdone', flush=True)
+    
     # acceleration from previous data
+    print('\tCalculating acceleration... ',end="",flush=True)
     net_F = net_force(starlist)
     mass  = np.array([[starlist[i][1]] for i in range(n_stars)])
     acc   = np.divide(net_F,mass)
+    print('\tdone', flush=True)
 
     # new data calculation
+    print('\tGenerating new list... ',end="",flush=True)
     pos   = p_pos + np.multiply(p_vel,dt) + np.multiply(acc,(dt**2)/2)
     vel   = p_vel + np.multiply(acc,dt)
+    print('\t\tdone',flush=True)
 
     for i in range(len(starlist)):
         new_data = [i,*mass[i],*pos[i,:],*vel[i,:]]
         new_starlist.append(new_data)
+        # print(new_data)
     return new_starlist
 
 
@@ -134,8 +210,13 @@ def animate_inline(starlist,ax,t):
     ax.set_xlim(-MAX,MAX)
     ax.set_ylim(-MAX,MAX)
     ax.set_zlim(-MAX,MAX)
- 
-    plt.title('galaxy age = {:1.3} [yr]'.format(t/year))
+
+    # show data
+    info = 'initial data:\nv_avg       = {} [m/s]\nn_stars     = {} \n'.format(star_v,num_stars)+\
+            'DM_rho0  = {:1.3} [kg/m^3]\nr_c            = {:1.3}[m]\nBH_mass  = {:1.3}[kg]\n'\
+            .format(rho0,r_c,BH_mass)
+    ax.text(MAX*0.7,MAX,MAX*1.5,info)
+    plt.title('galaxy age = {:1.3} [yr]\n'.format(t/year))
     plt.pause(0.001)
 
 def dist(x1,x2,y1,y2,z1,z2):
@@ -208,22 +289,26 @@ def net_force(starlist):
     return net_F + BH_force + DM_force
 
 def DM_mass(star):
+    import numpy as np
     r = dist(star[2],0,star[3],0,star[4],0)
-    v = 4 * pi * r**3 / 3
-    return v * DM_density
+    atan = np.arctan(r/r_c)
+    M = rho_0 * r_c**2 * 4*pi *(r - r_c * atan)
+    return M
 
-def save_data(gal_hist,savefile_name):
+def save_data(gal_hist,savefile_name,condition_data):
     # saves all data into .dat file
     import pickle
     output = open(savefile_name,'wb')
-    pickle.dump(gal_hist,output)
+    outputdata = [condition_data,gal_hist]
+    pickle.dump(outputdata,output)
     output.close()
     print('Generated Data was saved to {} successfully.'.format(savefile_name))
 
 #### main ####
-initial_list = data_read(csv_filename)
+initial_list, condition_data = dat_read(dat_filename)
+condition_data_input(condition_data)
 gal_hist = time_development(initial_list,dt,t_max)
-save_data(gal_hist,savefile_name)
+save_data(gal_hist,save_filename,condition_data)
 
 #animate(gal_hist) -> 12/2/2018: additional .py code will do the animation part now
 
