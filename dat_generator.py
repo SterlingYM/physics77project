@@ -22,17 +22,17 @@ gal_disk_r  = 25 * 10**3 * parsec #[m]
 gal_disk_dz = 0.15 * 10**3 * parsec #[m]
 gal_bulge_r = 0.5 * 10**3 * parsec #[m]
 BH_mass = 8.2 * 10**36 #[kg]
-rho_0 = 6.0 * 10 ** (-23) #[kg/m^3]
-r_c = 60 * kpc #[m]
+rho_0 = 4 * 10**7 * Msun / (kpc**3) #[kg/m^3] #from arXiv.1304.5127
+r_c = 60 * kpc #[m] #from arXiv:astro-ph/0403206
 
 # Star property
-star_v = 150 * 10**3 #[m/s]
-num_stars   = 10* 10**2
+star_v = 100 * 10**3 #[m/s]
+num_stars   = 1 * 10**2
 actual_num  = 10 ** 11
 mass_coef   = actual_num / num_stars
 
 # simulation parameters
-dt = 10**6 * year #[sec]
+dt = 5 * 10**5 * year #[sec]
 t_max = 10**9 * year #[sec]
 ####################################
 

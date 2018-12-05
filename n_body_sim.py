@@ -1,19 +1,58 @@
 ######## filename #########
 # initial data file
 import sys
-if len(sys.argv) <=1:
-    print('Error: File name not given')
-    print(' --> Specify initial data file name')
-    print('     (example: python3 n_body_sim.py initial_data.dat)')
-    exit()
-else:
-    dat_filename = sys.argv[1]
+default_name = 'initial_data/initial_data.dat'
+if len(sys.argv) == 1:
+    dat_filename = default_name
+    print('Warning: File name not given')
+    print(' --> Default initial data file ({}) is chosen.'.format(dat_filename))
+    print(' --> Press   ctrl + c  to abort')
+    multicore = False
 
+elif len(sys.argv) == 2:
+    if sys.argv[1] == '-m':
+        dat_filename = default_name
+        multicore = True
+        print('** Multi-core processing mode **')
+        print('Warning: File name not given')
+        print(' --> Default initial data file ({}) is chosen.'.format(dat_filename))
+        print(' --> Press   ctrl + c  to abort')
+    elif sys.argv[1] == '-s':
+        dat_filename = default_name
+        multicore = False
+        print('** Single-core processing mode **')
+        print('Warning: File name not given')
+        print(' --> Default initial data file ({}) is chosen.'.format(dat_filename))
+        print(' --> Press   ctrl + c  to abort')
+    else:
+        dat_filename = sys.argv[1]
+        print('** Single-core processing mode **')
+        multicore = False
+
+elif len(sys.argv) == 3:
+    dat_filename = sys.argv[2]
+    if sys.argv[1] == '-m':
+        print('** Multi-core processing mode **')
+        multicore = True
+    elif sys.argv[1] == '-s':
+        print('** Single-core processing mode **')
+        multicore = False
+    else:
+        print("Error: Invalid syntax")
+        print(" --> available option: '-m' (multi-core), '-s' (single-core)")
+        print("     (example: python3 n_body_sim.py -m initial_data.dat)")
+        exit()
+else:
+    print("Error: Invalid syntax")
+    print(" --> multi-core simultaneous simulation is not supported in this version yet.")
+    exit()
+    
 # output data file
 import datetime
 now = datetime.datetime.now()
 save_filename = 'gal_hist/gal_hist_{}.dat'.format(now.strftime('%m%d%Y_%H%M'))
-print(save_filename)
+swp_filename = 'gal_hist/gal_hist_{}.swp'.format(now.strftime('%m%d%Y_%H%M'))
+
 
 ########## constants #########
 
@@ -94,7 +133,7 @@ def condition_data_input(condition_data):
     disk_r,disk_dz,bulge_r,BH_mass,rho0,r_c,star_v,num_stars,actual_num,mass_coef,dt,t_max = condition_data[1]
 
 
-def time_development(initial_list,dt,t_max):
+def time_development(initial_list,dt,t_max,condition_data):
     # calls starloop() and stacks result on 'gal_hist'
     # repeats above for given time length
     gal_hist = []
@@ -107,7 +146,7 @@ def time_development(initial_list,dt,t_max):
     ax = fig.add_subplot(111, projection='3d')
     ####################################################
     
-    print("\n\n\n")
+    print("\n\n\n\n")
     for k in range(int(t_max/dt)):
         if k == 0:
             starlist = starloop(initial_list)
@@ -124,10 +163,18 @@ def time_development(initial_list,dt,t_max):
         # output formatting
         CURSOR_UP = '\x1b[1A'
         ERASE_LINE = '\x1b[2K'
-        print(ERASE_LINE,CURSOR_UP,ERASE_LINE,CURSOR_UP,ERASE_LINE,CURSOR_UP,ERASE_LINE,CURSOR_UP,ERASE_LINE,end="")
-        print('\rSimulation in progress...\t{:.2f}% completed\n\n'.format(float((k+1)*100)/float(t_max/dt)),flush=True)
-
+        print(ERASE_LINE,CURSOR_UP,ERASE_LINE,CURSOR_UP,ERASE_LINE,\
+                CURSOR_UP,ERASE_LINE,CURSOR_UP,ERASE_LINE,CURSOR_UP,ERASE_LINE,end="")
+        print('\rSimulation in progress...\t{:.2f}% completed\n\n'\
+                .format(float((k+1)*100)/float(t_max/dt)),flush=True)
+        
+        # save swp data
+        # I've experienced power outage at the end of hours of computation.. :(
+        # So here's a code that saves temporary file!
+        save_data(gal_hist,swp_filename,condition_data)
+        
     print("")
+
     return gal_hist
 
 def starloop(starlist):
@@ -143,7 +190,7 @@ def starloop(starlist):
     ERASE_LINE = '\x1b[2K'
    
     # previous data
-    print(CURSOR_UP,CURSOR_UP,ERASE_LINE,'\tLoading Previous data... ',end="",flush=True)
+    print(ERASE_LINE,CURSOR_UP,ERASE_LINE,CURSOR_UP,ERASE_LINE,'\tLoading Previous data... ',end="",flush=True)
     p_pos = np.array([starlist[i][2:5] for i in range(n_stars)])
     p_vel = np.array([starlist[i][5:8] for i in range(n_stars)])
     print('\tdone', flush=True)
@@ -263,17 +310,17 @@ def net_force(starlist):
     from itertools import product
 
     ########## multicore processing #########
-    # uncomment/comment out to switch between multicore/single-core mode
-    # multi-core processing  may or may not be faster
-    #  depending on the CPU power.
+    # multi-core is effective for larger number of stars.
     ########################################
     # **** multi-core ****
-    #with multiprocessing.Pool(n_stars) as pool:
-    #    F_ij_combinations_xyz = pool.starmap(force_ij, product(starlist,repeat=2))
+    if multicore == True:
+        with multiprocessing.Pool() as pool:
+            F_ij_combinations_xyz = pool.starmap(force_ij, product(starlist,repeat=2))
     ########################################
     # **** single-core ****
-    arg1, arg2 = zip(*product(starlist,repeat=2))
-    F_ij_combinations_xyz = list(map(force_ij,arg1,arg2))
+    else:
+        arg1, arg2 = zip(*product(starlist,repeat=2))
+        F_ij_combinations_xyz = list(map(force_ij,arg1,arg2))
     ########################################
 
 
@@ -314,12 +361,16 @@ def save_data(gal_hist,savefile_name,condition_data):
     output.close()
     print('Generated Data was saved to {} successfully.'.format(savefile_name))
 
+def delete_swp(swp_filename):
+    import os
+    os.remove(swp_filename)
+
 #### main ####
 initial_list, condition_data = dat_read(dat_filename)
 condition_data_input(condition_data)
-gal_hist = time_development(initial_list,dt,t_max)
+gal_hist = time_development(initial_list,dt,t_max,condition_data)
 save_data(gal_hist,save_filename,condition_data)
-
+delete_swp(swp_filename)
 #animate(gal_hist) -> 12/2/2018: additional .py code will do the animation part now
 
 
