@@ -15,25 +15,27 @@ kpc = 3.086 * 10**19 #[m]
 
 ########### parameters ##########
 # Data file
-filename = 'initial_data/initial_data.dat'
+filename = 'initial_data.dat'
 
 # Galaxy property
 gal_disk_r  = 25 * 10**3 * parsec #[m]
 gal_disk_dz = 0.15 * 10**3 * parsec #[m]
 gal_bulge_r = 0.5 * 10**3 * parsec #[m]
-BH_mass = 8.2 * 10**36 #[kg]
-rho_0 = 6.0 * 10 ** (-21) #[kg/m^3]
-r_c = 60 * kpc #[m]
+gass_mass = 10**9 * Msun #[kg]
+BH_mass = 8.2 * 10**36 + gass_mass #[kg]
+rho_0 = 4 * 10**7 * Msun / (kpc**3) #[kg/m^3] #from arXiv.1304.5127
+r_c = 60 * kpc #[m] #from arXiv:astro-ph/0403206
 
 # Star property
-star_v = 200 * 10**3 #[m/s]
-num_stars   = 1* 10**2
-actual_num  = 10 ** 10
+star_v = 150 * 10**3 #[m/s]
+num_stars   = 1 * 10**2
+actual_num  = 10 ** 11
 mass_coef   = actual_num / num_stars
 
 # simulation parameters
-dt = 10**6 * year #[sec]
+dt = 5 * 10**5 * year #[sec]
 t_max = 10**9 * year #[sec]
+softening = gal_disk_r / (num_stars)**(1/2) #[m]: mean distance
 ####################################
 
 
@@ -70,11 +72,14 @@ def initial_list_generator():
 
 def condition_data_generator():
     names  = ['disk_r','disk_dz','bulge_r','BH_m','DM_rho0','r_c','star_v',\
-            'num_stars','actual_num','mass_coef','dt','t_max']
+            'num_stars','actual_num','mass_coef','dt','t_max','softening']
     values = [gal_disk_r,gal_disk_dz,gal_bulge_r,BH_mass,rho_0,r_c,star_v,\
-            num_stars,actual_num,mass_coef,dt,t_max]
+            num_stars,actual_num,mass_coef,dt,t_max,softening]
     condition_data = [names,values]
-    print(condition_data)
+    print("Initial Condition Parameters:")
+    for i in range(len(names)):
+        print("\t* {:10}\t= {:1.2}".format(names[i],float(values[i])))
+
     return condition_data
   
 def output(filename,condition_data,initial_list):
@@ -90,5 +95,5 @@ def output(filename,condition_data,initial_list):
 initial_list   = initial_list_generator()
 condition_data = condition_data_generator()
 if output(filename,condition_data,initial_list):
-    print('Data was successfully created and saved to {}'.format(filename))
+    print('Data was successfully created and saved to \'{}\''.format(filename))
 
