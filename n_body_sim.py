@@ -1,7 +1,7 @@
 ######## filename #########
 # initial data file
 import sys
-default_name = 'initial_data/initial_data.dat'
+default_name = 'initial_data.dat'
 if len(sys.argv) == 1:
     dat_filename = default_name
     print('Warning: File name not given')
@@ -129,8 +129,8 @@ def dat_read(dat_filename):
 
 def condition_data_input(condition_data):
     # print(condition_data)
-    global disk_r,disk_dz,bulge_r,BH_mass,rho0,r_c,star_v,num_stars,actual_num,mass_coef,dt,t_max
-    disk_r,disk_dz,bulge_r,BH_mass,rho0,r_c,star_v,num_stars,actual_num,mass_coef,dt,t_max = condition_data[1]
+    global disk_r,disk_dz,bulge_r,BH_mass,rho0,r_c,star_v,num_stars,actual_num,mass_coef,dt,t_max,softening
+    disk_r,disk_dz,bulge_r,BH_mass,rho0,r_c,star_v,num_stars,actual_num,mass_coef,dt,t_max,softening = condition_data[1]
 
 
 def time_development(initial_list,dt,t_max,condition_data):
@@ -280,7 +280,12 @@ def force_ij(star1,star2):
     if x1==x2 and y1==y2 and z1==z2:
         return 0
     d = dist(x1,x2,y1,y2,z1,z2)
-    force_ij = (G*m1*m2)/(d**2)
+
+    # 12/06/2018: introducing 'softening length':
+    # Softening length kicks in as the distance gets close (negligible at large r)
+    # and 'softens' the force due to short r (especially useful at large dt)
+    # reference:  http://adsabs.harvard.edu/full/1993ApJ...409...60D
+    force_ij = (G*m1*m2*d)/(((d**2)+(softening**2))**(3/2))
     Fx,Fy,Fz = components(force_ij,x1,x2,y1,y2,z1,z2)
     return [Fx,Fy,Fz]
 
