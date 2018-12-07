@@ -60,7 +60,7 @@ def initial_list_generator():
         v = np.random.uniform(star_v - 150*10**3, star_v + 250*10**3,1)
         vx.append(float(star_v * -1 * y[i] / d))
         vy.append(float(star_v * x[i] / d))
-        vz.append(float(np.random.uniform(-10*10**3,-10*10**3,1)))
+        vz.append(float(np.random.uniform(-10*10**3,10*10**3,1)))
 
     # starlist
     initial_list = []
@@ -68,6 +68,49 @@ def initial_list_generator():
         stardata = [num[i],mass[i],x[i],y[i],z[i],vx[i],vy[i],vz[i]]
         initial_list.append(stardata)
     return initial_list
+
+
+def bulge (gal_bulge_r,number_of_particles):
+    import numpy as np
+    # spherical coordinate
+    radius = np.random.uniform(0.0,gal_bulge_r,0,(self.number_of_particles,1)) 
+    theta = np.random.uniform(0.,1.,(self.number_of_particles,1))*pi
+    phi = np.arccos(1-2*numpy.random.uniform(0.0,1.,(self.number_of_particles,1)))
+    
+    # number index
+    num = np.arange(number_of_particles)
+
+    # position
+    x = radius * np.sin( theta ) * npy.cos( phi )
+    y = radius * np.sin( theta ) * np.sin( phi )
+    z = radius * np.cos( theta )
+
+    # mass
+    totalmassgas = 9E18 #solar masses atomic and molecular
+    m = totalmassinbulge/number_of_particles
+    masslist = numpy.random.(m*0.5,m*2,number_of_particles)
+
+    # velocity
+    R  = numpy.sqrt(x**2 + y**2 + z**2)
+    vel_net = sqrt.((G * m )/ R)
+    vx = []
+    vy = []
+    vz = []
+    for i in range(number_of_particles):
+        d = np.sqrt(x[i]**2 + y[i]**2)
+        v = np.random.uniform(star_v - 150*10**3, star_v + 250*10**3,1)
+        vx.append(float(star_v * -1 * y[i] / d))
+        vy.append(float(star_v * x[i] / d))
+        vz.append(float(np.random.uniform(-10*10**3,10*10**3,1)))
+    
+    # starlist_bulge
+    starlist_bulge = []
+    for i in range(starlist_bulge):
+        each_star = [num[i],mass[i],x[i],y[i],z[i],vx[i],vy[i],vz[i]]
+        starlist_bulge.append(each_star)
+    return starlist_bulge
+    
+    
 
 
 def condition_data_generator():
