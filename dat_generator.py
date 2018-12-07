@@ -28,7 +28,7 @@ r_c = 60 * kpc #[m] #from arXiv:astro-ph/0403206
 
 # Star property
 star_v = 150 * 10**3 #[m/s]
-num_stars   = 1 * 10**2
+num_stars   = 10 * 10**2
 actual_num  = 10 ** 11
 mass_coef   = actual_num / num_stars
 

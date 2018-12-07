@@ -10,7 +10,7 @@ def animate(saved_data):
    
 
     # condition data
-    _,_,_,BH_mass,rho0,r_c,star_v,num_stars,_,_,_,_ = condition_data[1]
+    _,_,_,BH_mass,rho0,r_c,star_v,num_stars,_,_,_,_,_ = condition_data[1]
 
     from mpl_toolkits.mplot3d import Axes3D
     import matplotlib.pyplot as plt
