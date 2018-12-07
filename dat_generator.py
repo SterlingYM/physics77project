@@ -37,8 +37,8 @@ mass_coef   = actual_num / num_stars
 
 # simulation parameters
 dt          = 5 * 10**5 * year #[sec]
-t_max       = 10**9 * year #[sec]
-softening   = 10 * gal_disk_r / (num_stars)**(1/2) #[m]: mean distance
+t_max       = 5* 10**9 * year #[sec]
+softening   = 15 * gal_disk_r / (num_stars)**(1/2) #[m]: mean distance
 ####################################
 
 
