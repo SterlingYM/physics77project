@@ -89,8 +89,8 @@ def bulge (gal_bulge_r,num_stars):
     z = radius * np.cos( theta )
 
     # mass
-    massbulge = np.random.uniform(1*Msun*mass_coef,20*Msun*mass_coef,num_stars)
-    masslist = numpy.random.(m*0.5,m*2,number_of_particles)
+    massbulge = np.random.uniform(1*Msun*mass_coef,20*Msun*mass_coef,bulge_stars)
+    masslist = numpy.random.(m*0.5,m*2,bulge_stars)
 
     # velocity
     R  = numpy.sqrt(x**2 + y**2 + z**2)
@@ -98,7 +98,7 @@ def bulge (gal_bulge_r,num_stars):
     vx = []
     vy = []
     vz = []
-    for i in range(number_of_particles):
+    for i in range(bulge_stars):
         d = np.sqrt(x[i]**2 + y[i]**2)
         v = np.random.uniform(star_v - 150*10**3, star_v + 250*10**3,1)
         vx.append(float(star_v * -1 * y[i] / d))
