@@ -28,7 +28,7 @@ r_c         = 60 * kpc #[m] #from arXiv:astro-ph/0403206
 
 # Star property
 star_v      = 150 * 10**3 #[m/s]
-totalstar   = 2 * 10  ** 2
+totalstar   = 1.5 * 10  ** 2
 bulge_coef  = 0.4
 bulgestar   = int(bulge_coef * totalstar)
 num_stars   = int(totalstar - bulgestar)
@@ -38,7 +38,7 @@ mass_coef   = actual_num / num_stars
 # simulation parameters
 dt          = 5 * 10**5 * year #[sec]
 t_max       = 10**9 * year #[sec]
-softening   = gal_disk_r / (num_stars)**(1/2) #[m]: mean distance
+softening   = 10 * gal_disk_r / (num_stars)**(1/2) #[m]: mean distance
 ####################################
 
 
@@ -60,9 +60,9 @@ def initial_list_generator():
     vz = []
     for i in range(num_stars):
         d = np.sqrt(x[i]**2 + y[i]**2)
-        v = np.random.uniform(star_v - 150*10**3, star_v + 250*10**3,1)
-        vx.append(float(star_v * -1 * y[i] / d))
-        vy.append(float(star_v * x[i] / d))
+        v = np.random.uniform(star_v * 0.8, star_v * 1.2,1)
+        vx.append(float(v * -1 * y[i] / d))
+        vy.append(float(v * x[i] / d))
         vz.append(float(np.random.uniform(-10*10**3,10*10**3,1)))
 
     # starlist
@@ -76,38 +76,39 @@ def initial_list_generator():
 def bulge ():
     import numpy as np
     # spherical coordinate
-
-    radius = np.random.uniform(0.0,gal_bulge_r,(bulgestar,1))  
-    theta = np.random.uniform(0.,1.,(bulgestar,1))*pi
-    phi = np.arccos(1-2*np.random.uniform(0.0,1.,(bulgestar,1)))
+    num_bulge = int(bulgestar / 2)
+    radius = np.random.uniform(0.0,gal_bulge_r,num_bulge)  
+    theta = np.random.uniform(0.,1.,num_bulge)*pi
+    phi = np.arccos(1-2*np.random.uniform(0.0,1.,num_bulge))
     
     # number index
-    num = np.arange(bulgestar) 
+    num = np.arange(num_bulge * 2) 
 
     # position
-    x = radius * np.sin( theta ) * np.cos( phi )
-    y = radius * np.sin( theta ) * np.sin( phi )
-    z = radius * np.cos( theta )
+    x1 = radius * np.sin( theta ) * np.cos( phi )
+    x  = np.concatenate((x1,-x1),axis=0)
+    y1 = radius * np.sin( theta ) * np.sin( phi )
+    y  = np.concatenate((y1,-y1),axis=0)
+    z1 = radius * np.cos( theta )
+    z  = np.concatenate((z1,z1),axis=0)
 
     # mass
     massbulge = np.random.uniform(1*Msun*mass_coef,20*Msun*mass_coef,bulgestar)
 
     # velocity
-    R  = np.sqrt(x**2 + y**2 + z**2)
-    vel_net = np.power(np.multiply(massbulge,(G/R)),(1/2))
     vx = []
     vy = []
     vz = []
-    for i in range(bulgestar):
+    for i in range(num_bulge*2):
         d = np.sqrt(x[i]**2 + y[i]**2)
-        v = np.random.uniform(star_v - 150*10**3, star_v + 250*10**3,1)
-        vx.append(float(star_v * -1 * y[i] / d))
-        vy.append(float(star_v * x[i] / d))
+        vel_net = np.sqrt(massbulge[i]*G/d) 
+        vx.append(float(vel_net * -1 * y[i] / d))
+        vy.append(float(vel_net * x[i] / d))
         vz.append(float(np.random.uniform(-10*10**3,10*10**3,1)))
     
     # starlist_bulge
     starlist_bulge = []
-    for i in range(bulgestar):
+    for i in range(num_bulge * 2):
         each_star = [num[i],massbulge[i],x[i],y[i],z[i],vx[i],vy[i],vz[i]]
         starlist_bulge.append(each_star)
     return starlist_bulge
