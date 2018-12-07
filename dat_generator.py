@@ -5,38 +5,40 @@
 ########### constants ##########
 # constants are shared with n_body_simulation.py
 # (do not change)
-parsec = 3.086 * 10**16 #[m]
-Msun = 1.989 * 10**30 #[kg]
-G = 6.67408 * 10**(-11) #[m^3 * kg^(-1) * s^(-2)]
-pi = 3.141592653
-day = 3600*24 #[sec]
-year = 3600*24*365 #[sec]
-kpc = 3.086 * 10**19 #[m]
+parsec      = 3.086 * 10**16 #[m]
+Msun        = 1.989 * 10**30 #[kg]
+G           = 6.67408 * 10**(-11) #[m^3 * kg^(-1) * s^(-2)]
+pi          = 3.141592653
+day         = 3600*24 #[sec]
+year        = 3600*24*365 #[sec]
+kpc         = 3.086 * 10**19 #[m]
 
 ########### parameters ##########
 # Data file
 filename = 'initial_data.dat'
 
 # Galaxy property
-gal_disk_r  = 25 * 10**3 * parsec #[m]
-gal_disk_dz = 0.15 * 10**3 * parsec #[m]
-gal_bulge_r = 0.5 * 10**3 * parsec #[m]
-gass_mass = 10**9 * Msun #[kg]
-BH_mass = 8.2 * 10**36 + gass_mass #[kg]
-rho_0 = 4 * 10**7 * Msun / (kpc**3) #[kg/m^3] #from arXiv.1304.5127
-r_c = 60 * kpc #[m] #from arXiv:astro-ph/0403206
+gal_disk_r  = 25 * kpc #[m]
+gal_disk_dz = 0.15 * kpc #[m]
+gal_bulge_r = 10 * kpc #[m]
+gass_mass   = 10**9 * Msun #[kg]
+BH_mass     = 8.2 * 10**36 + gass_mass #[kg]
+rho_0       = 4 * 10**7 * Msun / (kpc**3) #[kg/m^3] #from arXiv.1304.5127
+r_c         = 60 * kpc #[m] #from arXiv:astro-ph/0403206
 
 # Star property
-star_v = 150 * 10**3 #[m/s]
-totalstar = 10 * 10  ** 2
-num_stars   = .7 * totalstar
+star_v      = 150 * 10**3 #[m/s]
+totalstar   = 2 * 10  ** 2
+bulge_coef  = 0.4
+bulgestar   = int(bulge_coef * totalstar)
+num_stars   = int(totalstar - bulgestar)
 actual_num  = 10 ** 11
 mass_coef   = actual_num / num_stars
 
 # simulation parameters
-dt = 5 * 10**5 * year #[sec]
-t_max = 10**9 * year #[sec]
-softening = gal_disk_r / (num_stars)**(1/2) #[m]: mean distance
+dt          = 5 * 10**5 * year #[sec]
+t_max       = 10**9 * year #[sec]
+softening   = gal_disk_r / (num_stars)**(1/2) #[m]: mean distance
 ####################################
 
 
@@ -71,34 +73,32 @@ def initial_list_generator():
     return initial_list
 
 
-def bulge (gal_bulge_r,num_stars):
+def bulge ():
     import numpy as np
     # spherical coordinate
-    bulgestar = .3 * num_stars
 
-    radius = np.random.uniform(0.0,gal_bulge_r,0(bulgestar,1))  
+    radius = np.random.uniform(0.0,gal_bulge_r,(bulgestar,1))  
     theta = np.random.uniform(0.,1.,(bulgestar,1))*pi
-    phi = np.arccos(1-2*numpy.random.uniform(0.0,1.,(bulgestar,1)))
+    phi = np.arccos(1-2*np.random.uniform(0.0,1.,(bulgestar,1)))
     
     # number index
     num = np.arange(bulgestar) 
 
     # position
-    x = radius * np.sin( theta ) * npy.cos( phi )
+    x = radius * np.sin( theta ) * np.cos( phi )
     y = radius * np.sin( theta ) * np.sin( phi )
     z = radius * np.cos( theta )
 
     # mass
-    massbulge = np.random.uniform(1*Msun*mass_coef,20*Msun*mass_coef,bulge_stars)
-    masslist = numpy.random.(m*0.5,m*2,bulge_stars)
+    massbulge = np.random.uniform(1*Msun*mass_coef,20*Msun*mass_coef,bulgestar)
 
     # velocity
-    R  = numpy.sqrt(x**2 + y**2 + z**2)
-    vel_net = sqrt.((G * m )/ R)
+    R  = np.sqrt(x**2 + y**2 + z**2)
+    vel_net = np.power(np.multiply(massbulge,(G/R)),(1/2))
     vx = []
     vy = []
     vz = []
-    for i in range(bulge_stars):
+    for i in range(bulgestar):
         d = np.sqrt(x[i]**2 + y[i]**2)
         v = np.random.uniform(star_v - 150*10**3, star_v + 250*10**3,1)
         vx.append(float(star_v * -1 * y[i] / d))
@@ -107,8 +107,8 @@ def bulge (gal_bulge_r,num_stars):
     
     # starlist_bulge
     starlist_bulge = []
-    for i in range(starlist_bulge):
-        each_star = [num[i],mass[i],x[i],y[i],z[i],vx[i],vy[i],vz[i]]
+    for i in range(bulgestar):
+        each_star = [num[i],massbulge[i],x[i],y[i],z[i],vx[i],vy[i],vz[i]]
         starlist_bulge.append(each_star)
     return starlist_bulge
     
@@ -117,9 +117,9 @@ def bulge (gal_bulge_r,num_stars):
 
 def condition_data_generator():
     names  = ['disk_r','disk_dz','bulge_r','BH_m','DM_rho0','r_c','star_v',\
-            'num_stars','actual_num','mass_coef','dt','t_max','softening']
+            'num_stars','bulgestars','actual_num','mass_coef','dt','t_max','softening']
     values = [gal_disk_r,gal_disk_dz,gal_bulge_r,BH_mass,rho_0,r_c,star_v,\
-            num_stars,actual_num,mass_coef,dt,t_max,softening]
+            num_stars,int(0.3*totalstar),actual_num,mass_coef,dt,t_max,softening]
     condition_data = [names,values]
     print("Initial Condition Parameters:")
     for i in range(len(names)):
@@ -139,6 +139,8 @@ def output(filename,condition_data,initial_list):
 ### main ###
 initial_list   = initial_list_generator()
 condition_data = condition_data_generator()
+bulge_list     = bulge()
+initial_list = initial_list + bulge_list
 if output(filename,condition_data,initial_list):
     print('Data was successfully created and saved to \'{}\''.format(filename))
 

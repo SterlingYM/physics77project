@@ -129,8 +129,8 @@ def dat_read(dat_filename):
 
 def condition_data_input(condition_data):
     # print(condition_data)
-    global disk_r,disk_dz,bulge_r,BH_mass,rho0,r_c,star_v,num_stars,actual_num,mass_coef,dt,t_max,softening
-    disk_r,disk_dz,bulge_r,BH_mass,rho0,r_c,star_v,num_stars,actual_num,mass_coef,dt,t_max,softening = condition_data[1]
+    global disk_r,disk_dz,bulge_r,BH_mass,rho0,r_c,star_v,num_stars,num_bulge,actual_num,mass_coef,dt,t_max,softening
+    disk_r,disk_dz,bulge_r,BH_mass,rho0,r_c,star_v,num_stars,num_bulge,actual_num,mass_coef,dt,t_max,softening = condition_data[1]
 
 
 def time_development(initial_list,dt,t_max,condition_data):
@@ -259,7 +259,8 @@ def animate_inline(starlist,ax,t):
     ax.set_zlim(-MAX,MAX)
 
     # show data
-    info = 'initial data:\nv_avg       = {} [m/s]\nn_stars     = {} \n'.format(star_v,num_stars)+\
+    info = 'initial data:\nv_avg       = {} [m/s]\nn_stars     = {}\nn_bulge     = {}\n'\
+            .format(star_v,num_stars,num_bulge)+\
             'DM_rho0  = {:1.3} [kg/m^3]\nr_c            = {:1.3}[m]\nBH_mass  = {:1.3}[kg]\n'\
             .format(rho0,r_c,BH_mass)
     ax.text(MAX*0.7,MAX,MAX*1.5,info)

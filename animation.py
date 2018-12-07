@@ -10,7 +10,7 @@ def animate(saved_data):
    
 
     # condition data
-    _,_,_,BH_mass,rho0,r_c,star_v,num_stars,_,_,_,_,_ = condition_data[1]
+    _,_,_,BH_mass,rho0,r_c,star_v,num_stars,num_bulge,_,_,_,_,_ = condition_data[1]
 
     from mpl_toolkits.mplot3d import Axes3D
     import matplotlib.pyplot as plt
@@ -38,7 +38,8 @@ def animate(saved_data):
         ax.set_zlim(-MAX,MAX)
         
         # info
-        info = 'initial data:\nv_avg       = {} [m/s]\nn_stars     = {} \n'.format(star_v,num_stars)+\
+        info = 'initial data:\nv_avg       = {} [m/s]\nn_stars     = {} \nn_bulge     = {} \n'\
+                .format(star_v,num_stars,num_bulge)+\
             'DM_rho0  = {:1.3} [kg/m^3]\nr_c            = {:1.3}[m]\nBH_mass  = {:1.3}[kg]\n'\
             .format(rho0,r_c,BH_mass)
         ax.text(MAX*0.7,MAX,MAX*1.5,info)
