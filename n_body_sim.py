@@ -204,8 +204,8 @@ def starloop(starlist):
 
     # new data calculation
     print('\tGenerating new list... ',end="",flush=True)
-    pos   = p_pos + np.multiply(p_vel,dt) + np.multiply(acc,(dt**2)/2)
     vel   = p_vel + np.multiply(acc,dt)
+    pos   = p_pos + np.multiply(vel,dt) + np.multiply(acc,(dt**2)/2)
     print('\t\tdone',flush=True)
 
     for i in range(len(starlist)):

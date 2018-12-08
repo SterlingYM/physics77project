@@ -49,7 +49,7 @@ def animate(saved_data):
         ax.scatter(0,0,0,color='orange')
         ax.scatter(xlist,ylist,zlist)
         plt.title('galaxy age = {:1.2} [yr]'.format(gal_hist[i][0]/year))
-        plt.pause(0.001)
+        plt.pause(0.00001)
     
         # plot velocity curve
         fig2.clf()
@@ -62,7 +62,7 @@ def animate(saved_data):
         vel_list = np.divide(np.power(( np.power(vxlist,2) + np.power(vylist,2) + np.power(vzlist,2)),(1/2)),1000)
         r_list = np.divide(np.power( np.power(xlist,2) + np.power(ylist,2) + np.power(zlist,2),(1/2)),kpc)
         plt.scatter(r_list,vel_list)
-        plt.pause(0.001)
+        plt.pause(0.00001)
 
     plt.show()
 
