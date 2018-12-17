@@ -1,3 +1,7 @@
+note: the documentation below is written for midterm checkpoint. The structure of system has been changed for the final submission, and therefore this document is not relevant to the project anymore (Dec 2018).
+
+
+
 # Physics 77 final project
 This is a set of codes for private project.
 
